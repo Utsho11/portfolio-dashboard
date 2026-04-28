@@ -1,4 +1,4 @@
-import { Button, Col, Image, Modal, Row, Typography } from "antd";
+import { Button, Col, Divider, Image, Modal, Row, Typography } from "antd";
 import { useNavigate } from "react-router-dom";
 import {
   useDeleteBlogMutation,
@@ -154,6 +154,13 @@ const ManageBlogs = () => {
     }
   };
 
+  const labelStyle: React.CSSProperties = {
+    marginBottom: "2px",
+    display: "block",
+    color: "black",
+    fontWeight: 500,
+  };
+
   return (
     <div style={{ background: "#010313" }} className="">
       <div
@@ -204,29 +211,32 @@ const ManageBlogs = () => {
               </Typography.Title>
               <PHForm onSubmit={onSubmit} defaultValues={isEditing}>
                 <div style={{ marginBottom: "16px" }}>
+                  <Typography.Text style={labelStyle}>Title</Typography.Text>
                   <PHInput
                     type="text"
                     name="title"
-                    label="Title:"
                     placeholder="Enter blog title"
                   />
                 </div>
                 <div style={{ marginBottom: "16px" }}>
+                  <Typography.Text style={labelStyle}>Author</Typography.Text>
                   <PHInput
                     type="text"
                     name="author"
-                    label="Author Name:"
                     placeholder="Enter author name"
                   />
                 </div>
                 <div style={{ marginBottom: "16px", height: "15rem" }}>
+                  <Typography.Text style={labelStyle}>
+                    Description
+                  </Typography.Text>
                   <PHTextEditor
                     type="text"
                     name="description"
-                    label="Description:"
                     placeholder="Write Description"
                   />
                 </div>
+                <Divider />
                 <div style={{ marginBottom: "16px" }}>
                   <PHFileInput
                     name="file"
