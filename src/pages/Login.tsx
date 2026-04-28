@@ -24,11 +24,6 @@ const Login = () => {
   };
   const dispatch = useAppDispatch();
 
-  const defaultValues = {
-    userId: "admin@gmail.com",
-    password: "admin@123",
-  };
-
   const [login] = useLoginMutation();
 
   const onSubmit = async (data: FieldValues) => {
@@ -70,7 +65,7 @@ const Login = () => {
     <Row
       justify="center"
       align="middle"
-      style={{ height: "100vh", background: "#f0f2f5" }}
+      style={{ height: "100vh", background: "#010313" }}
     >
       <Col
         xs={22}
@@ -78,19 +73,19 @@ const Login = () => {
         md={12}
         lg={8}
         style={{
-          background: "#fff",
           padding: "24px",
           borderRadius: "8px",
           boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+          background: "#170F21",
         }}
       >
         <Typography.Title
           level={3}
-          style={{ textAlign: "center", marginBottom: "24px" }}
+          style={{ textAlign: "center", marginBottom: "24px", color: "#fff" }}
         >
           Login
         </Typography.Title>
-        <PHForm onSubmit={onSubmit} defaultValues={defaultValues}>
+        <PHForm onSubmit={onSubmit}>
           <div style={{ marginBottom: "16px" }}>
             <PHInput
               type="email"
@@ -107,7 +102,14 @@ const Login = () => {
               placeholder="Enter your password"
             />
 
-            <Checkbox onChange={onChange}>Show Password</Checkbox>
+            <Checkbox
+              onChange={onChange}
+              style={{
+                color: "#fff",
+              }}
+            >
+              Show Password
+            </Checkbox>
           </div>
           <Button type="primary" htmlType="submit" block>
             Login

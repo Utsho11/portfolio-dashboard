@@ -20,7 +20,9 @@ const PHInput = ({ type, name, label, disabled, placeholder }: TInputProps) => {
       <Controller
         name={name}
         render={({ field }) => (
-          <Form.Item label={<span style={{ color: "white" }}>{label}</span>}>
+          <Form.Item
+            label={label && <span style={{ color: "white" }}>{label}</span>}
+          >
             <Input
               {...field}
               type={type}

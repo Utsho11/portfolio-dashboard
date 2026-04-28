@@ -1,4 +1,4 @@
-import { Row, Col, Typography, Button } from "antd";
+import { Row, Col, Typography, Button, Divider } from "antd";
 import PHForm from "../form/PHForm";
 import PHInput from "../form/PHInput";
 import { FieldValues } from "react-hook-form";
@@ -45,63 +45,110 @@ const CreateBlog = () => {
     }
   };
 
+  const labelStyle: React.CSSProperties = {
+    marginBottom: "2px",
+    display: "block",
+    color: "rgba(255,255,255,0.85)",
+    fontWeight: 500,
+  };
+
   return (
-    <Row justify="center" style={{ background: "#010313" }}>
-      <Col
-        xs={22}
-        sm={16}
-        md={12}
-        lg={8}
-        style={{
-          background: "#170F21",
-          padding: "24px",
-          borderRadius: "8px",
-          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-        }}
-      >
-        <Typography.Title
-          level={3}
-          style={{ textAlign: "center", marginBottom: "24px", color: "white" }}
+    <Row
+      justify="center"
+      align="middle"
+      style={{
+        minHeight: "100vh",
+        background: "#010313",
+        padding: "24px 12px",
+      }}
+    >
+      <Col xs={24} sm={22} md={20} lg={18} xl={14} xxl={10}>
+        <div
+          style={{
+            background: "rgba(23, 15, 33, 0.95)",
+            padding: "clamp(20px, 4vw, 36px)",
+            borderRadius: "20px",
+            boxShadow: "0 20px 60px rgba(0, 0, 0, 0.45)",
+            border: "1px solid rgba(255,255,255,0.08)",
+          }}
         >
-          Post Blog
-        </Typography.Title>
-        <PHForm onSubmit={onSubmit}>
-          <div style={{ marginBottom: "16px" }}>
-            <PHInput
-              type="text"
-              name="title"
-              label="Title"
-              placeholder="Enter blog title"
-            />
-          </div>
-          <div style={{ marginBottom: "16px" }}>
-            <PHInput
-              type="text"
-              name="author"
-              label="Author Name"
-              placeholder="Enter author name"
-            />
-          </div>
-          <div style={{ marginBottom: "16px", height: "15rem" }}>
-            <PHTextEditor
-              type="text"
-              name="description"
-              label="Description"
-              placeholder="Write Description"
-            />
-          </div>
-          <div style={{ marginBottom: "16px" }}>
-            <PHFileInput
-              name="file"
-              label="Insert Image"
-              accept="image/*" // Example: restrict to image files
-              onFileChange={handleFileChange}
-            />
-          </div>
-          <Button type="primary" htmlType="submit" block>
+          <Typography.Title
+            level={2}
+            style={{
+              textAlign: "center",
+              marginBottom: "8px",
+              color: "#fff",
+              fontWeight: 700,
+              fontSize: "clamp(24px, 4vw, 32px)",
+            }}
+          >
             Post Blog
-          </Button>
-        </PHForm>
+          </Typography.Title>
+
+          <Typography.Text
+            style={{
+              display: "block",
+              textAlign: "center",
+              color: "rgba(255,255,255,0.55)",
+              marginBottom: "32px",
+            }}
+          >
+            Add your blog and publish it to your portfolio.
+          </Typography.Text>
+
+          <PHForm onSubmit={onSubmit}>
+            <Row gutter={[16, 18]}>
+              <Col xs={24}>
+                <PHInput
+                  type="text"
+                  name="title"
+                  label="Title"
+                  placeholder="Enter blog title"
+                />
+              </Col>
+
+              <Col xs={24}>
+                <PHInput
+                  type="text"
+                  name="author"
+                  label="Author Name"
+                  placeholder="Enter author name"
+                />
+              </Col>
+
+              <Col xs={24}>
+                <Typography.Text style={labelStyle}>
+                  Description
+                </Typography.Text>
+                <PHTextEditor
+                  type="text"
+                  name="description"
+                  placeholder="Write Description"
+                />
+              </Col>
+              <Divider dashed />
+
+              <Col xs={24}>
+                <Typography.Text style={labelStyle}>
+                  Insert Image
+                </Typography.Text>
+                <div className="">
+                  <PHFileInput
+                    name="file"
+                    accept="image/*" // Example: restrict to image files
+                    onFileChange={handleFileChange}
+                  />
+                </div>
+              </Col>
+
+              <Col xs={24}>
+                <Button type="primary" htmlType="submit" block>
+                  Post Blog
+                </Button>
+              </Col>
+            </Row>
+          </PHForm>
+        </div>
       </Col>
     </Row>
   );

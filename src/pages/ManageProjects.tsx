@@ -1,5 +1,4 @@
 import { Button, Col, Image, Input, Modal, Row, Typography } from "antd";
-import { useNavigate } from "react-router-dom";
 import { Table } from "antd";
 import {
   DeleteOutlined,
@@ -27,6 +26,7 @@ import {
   useUpdateProjectMutation,
 } from "../redux/services/projectApi";
 import { TProject } from "../types/project";
+import { useNavigate } from "react-router-dom";
 
 type TRecord = {
   key: string;
@@ -118,11 +118,29 @@ const ManageProjects = () => {
       title: "Github Link",
       dataIndex: "github",
       key: "github",
+      render: (text: string) => {
+        return text ? (
+          <a href={text} target="_blank" rel="noopener noreferrer">
+            <span>{text}</span>
+          </a>
+        ) : (
+          "-"
+        );
+      },
     },
     {
       title: "Live Link",
       dataIndex: "liveLink",
       key: "liveLink",
+      render: (text: string) => {
+        return text ? (
+          <a href={text} target="_blank" rel="noopener noreferrer">
+            {text}
+          </a>
+        ) : (
+          "-"
+        );
+      },
     },
     {
       title: "Post Date",

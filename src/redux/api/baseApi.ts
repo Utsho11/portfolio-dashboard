@@ -26,7 +26,7 @@ interface ErrorData {
 }
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: "http://localhost:5000/api",
+  baseUrl: "https://portfolio-server-nu-two.vercel.app/api",
   credentials: "include",
   prepareHeaders: (headers, { getState }) => {
     const token = (getState() as RootState).auth.token;
@@ -62,10 +62,13 @@ const baseQueryWithRefreshToken: BaseQueryFn<
       //* Send Refresh
       // console.log("Sending refresh token");
 
-      const res = await fetch("http://localhost:5000/api/auth/refresh-token", {
-        method: "POST",
-        credentials: "include",
-      });
+      const res = await fetch(
+        "https://portfolio-server-nu-two.vercel.app/api/auth/refresh-token",
+        {
+          method: "POST",
+          credentials: "include",
+        },
+      );
 
       const data = await res.json();
 
@@ -76,7 +79,7 @@ const baseQueryWithRefreshToken: BaseQueryFn<
           setUser({
             user,
             token: data.data.accessToken,
-          })
+          }),
         );
 
         result = await baseQuery(args, api, extraOptions);

@@ -6,25 +6,24 @@ import { Form } from "antd";
 type TInputProps = {
   type: string;
   name: string;
-  label?: string;
   disabled?: boolean;
   placeholder?: string;
 };
 
-const PHTextEditor = ({ label, name, placeholder = "" }: TInputProps) => {
+const PHTextEditor = ({ name, placeholder = "" }: TInputProps) => {
   return (
     <div style={{ marginBottom: "20px" }}>
       <Controller
         name={name}
         render={({ field }) => (
-          <Form.Item label={<span style={{ color: "white" }}>{label}</span>}>
+          <Form.Item>
             <ReactQuill
               theme="snow"
               value={field.value || ""}
               onChange={field.onChange}
               onBlur={field.onBlur}
               placeholder={placeholder}
-              style={{ height: "10rem", color: "white" }}
+              style={{ height: "15rem", color: "white" }}
             />
           </Form.Item>
         )}
