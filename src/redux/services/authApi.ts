@@ -15,7 +15,7 @@ const authApi = baseApi.injectEndpoints({
       query: () => {
         return { url: "/auth/get-me", method: "GET" };
       },
-      providesTags: ["blog"],
+      providesTags: ["user", "blog", "project"],
       keepUnusedDataFor: 0,
       transformResponse: (response: TResponseRedux<TUserDetails>) => {
         return {

@@ -31,19 +31,23 @@ const Login = () => {
 
     try {
       const userInfo = {
-        email: data.userId,
+        email: data.email || data.userId,
         password: data.password,
       };
       const res = await login(userInfo).unwrap();
 
       const user = verifyToken(res.data.accessToken) as TUser;
       dispatch(setUser({ user: user, token: res.data.accessToken }));
-      toast.success("Logged in", { id: toastId, duration: 2000 });
+      toast.success("Logged in successfully", { id: toastId, duration: 2000 });
 
       navigate(`/profile`);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (err) {
-      toast.error("Something went wrong", { id: toastId, duration: 2000 });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      const errorMsg =
+        err?.data?.message ||
+        err?.message ||
+        "Login failed. Please check your credentials.";
+      toast.error(errorMsg, { id: toastId, duration: 2000 });
     }
   };
 
@@ -52,7 +56,7 @@ const Login = () => {
   // If a valid token exists, navigate to the profile page
   useEffect(() => {
     if (token) {
-      const user = verifyToken(token) as TUser;
+      const user = verifyToken(token) as TUser | null;
       if (user?.email) {
         navigate(`/profile`);
       }

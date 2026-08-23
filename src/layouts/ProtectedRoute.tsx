@@ -18,11 +18,12 @@ const ProtectedRoute = ({ children, role }: TProtectedRoute) => {
   const location = useLocation();
   const token = useAppSelector(useCurrentToken);
 
-  let user: TUser | undefined;
+  let user: TUser | null | undefined;
 
   if (token) {
-    user = verifyToken(token) as TUser;
+    user = verifyToken(token) as TUser | null;
   }
+
 
   useEffect(() => {
     if (role !== undefined && role !== user?.role) {

@@ -17,11 +17,12 @@ type SidebarProps = {
 const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
   const token = useAppSelector(useCurrentToken);
 
-  let user: TUser | undefined;
+  let user: TUser | null | undefined;
 
   if (token) {
-    user = verifyToken(token) as TUser;
+    user = verifyToken(token) as TUser | null;
   }
+
 
   let sidebarItems;
 

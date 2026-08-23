@@ -25,8 +25,12 @@ interface ErrorData {
   message: string;
 }
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://portfolio-server-nu-two.vercel.app/api";
+
 const baseQuery = fetchBaseQuery({
-  baseUrl: "https://portfolio-server-nu-two.vercel.app/api",
+  baseUrl: API_BASE_URL,
   credentials: "include",
   prepareHeaders: (headers, { getState }) => {
     const token = (getState() as RootState).auth.token;
@@ -47,43 +51,48 @@ const baseQueryWithRefreshToken: BaseQueryFn<
 > = async (args, api, extraOptions): Promise<any> => {
   let result = await baseQuery(args, api, extraOptions);
   if (result.error) {
-    const errorData = result.error.data as ErrorData;
+    const errorData = result.error.data as ErrorData | undefined;
+    const errorMessage =
+      errorData?.message ||
+      (typeof result.error.data === "string" ? result.error.data : null) ||
+      "Something went wrong";
 
     if (result.error.status === 404) {
-      toast.error(errorData.message);
+      toast.error(errorMessage);
     }
     if (result.error.status === 403) {
-      toast.error(errorData.message);
+      toast.error(errorMessage);
     }
     if (result.error.status === 400) {
-      toast.error(errorData.message);
+      toast.error(errorMessage);
     }
     if (result.error.status === 401) {
-      //* Send Refresh
-      // console.log("Sending refresh token");
-
-      const res = await fetch(
-        "https://portfolio-server-nu-two.vercel.app/api/auth/refresh-token",
-        {
+      try {
+        const res = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
           method: "POST",
           credentials: "include",
-        },
-      );
+        });
 
-      const data = await res.json();
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.data?.accessToken) {
+            const user = (api.getState() as RootState).auth.user;
 
-      if (data?.data?.accessToken) {
-        const user = (api.getState() as RootState).auth.user;
+            api.dispatch(
+              setUser({
+                user,
+                token: data.data.accessToken,
+              })
+            );
 
-        api.dispatch(
-          setUser({
-            user,
-            token: data.data.accessToken,
-          }),
-        );
-
-        result = await baseQuery(args, api, extraOptions);
-      } else {
+            result = await baseQuery(args, api, extraOptions);
+          } else {
+            api.dispatch(logout());
+          }
+        } else {
+          api.dispatch(logout());
+        }
+      } catch {
         api.dispatch(logout());
       }
     }
