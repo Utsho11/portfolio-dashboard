@@ -60,7 +60,7 @@ const ManageBlogs = () => {
     };
   });
 
-  const onDeleteStudent = (record: TRecord) => {
+  const onDeleteBlog = (record: TRecord) => {
     Modal.confirm({
       title: "Are you sure, you want to delete this blog record?",
       okText: "Yes",
@@ -107,7 +107,7 @@ const ManageBlogs = () => {
             />
             <DeleteOutlined
               onClick={() => {
-                onDeleteStudent(record);
+                onDeleteBlog(record);
               }}
               style={{ color: "red", marginLeft: 12 }}
             />
@@ -133,17 +133,23 @@ const ManageBlogs = () => {
   };
 
   const onSubmit = async (data: FieldValues) => {
-    console.log(data);
-    const toastId = toast.loading("Blog posting....");
+    const toastId = toast.loading("Updating blog....");
     const formData = new FormData();
     if (selectedFile) {
       formData.append("file", selectedFile);
     }
 
+    const updatedData = {
+      key: isEditing?.key,
+      _id: isEditing?.key,
+      id: isEditing?.key,
+      ...data,
+    };
+
     try {
-      formData.append("data", JSON.stringify(data));
+      formData.append("data", JSON.stringify(updatedData));
       await updateBlog(formData).unwrap();
-      toast.success("Successfully Posted Blog.", {
+      toast.success("Successfully Updated Blog.", {
         id: toastId,
         duration: 2000,
       });
@@ -180,7 +186,7 @@ const ManageBlogs = () => {
           }}
         >
           <PlusOutlined />
-          Edit Blog
+          Publish Blog
         </Button>
       </div>
       <div className="">
@@ -190,7 +196,7 @@ const ManageBlogs = () => {
           columns={columns}
         />
         <Modal
-          title="Edit blog"
+          title="Edit Blog"
           open={isModalOpen}
           onCancel={handleCancel}
           footer={null}
@@ -207,7 +213,7 @@ const ManageBlogs = () => {
                 level={3}
                 style={{ textAlign: "center", marginBottom: "24px" }}
               >
-                Post Blog
+                Edit Blog
               </Typography.Title>
               <PHForm onSubmit={onSubmit} defaultValues={isEditing}>
                 <div style={{ marginBottom: "16px" }}>
@@ -246,7 +252,7 @@ const ManageBlogs = () => {
                   />
                 </div>
                 <Button type="primary" htmlType="submit" block>
-                  Edit Blog
+                  Update Blog
                 </Button>
               </PHForm>
             </Col>
