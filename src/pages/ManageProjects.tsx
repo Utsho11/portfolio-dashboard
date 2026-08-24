@@ -6,11 +6,13 @@ import {
   Modal,
   Row,
   Select,
+  Space,
   Switch,
   Tag,
   Typography,
 } from "antd";
 import { Table } from "antd";
+
 import {
   DeleteOutlined,
   EditOutlined,
