@@ -241,12 +241,17 @@ const ManageProjects = () => {
       formData.append("file", selectedFile);
     }
 
+    const projectId =
+      isEditing?._id || (isEditing as any)?.key || isEditing?.slug;
+
     const updatedData = {
-      key: isEditing?._id || isEditing?.slug,
       _id: isEditing?._id,
-      id: isEditing?._id,
+      id: projectId,
+      key: projectId,
+      slug: data.slug || isEditing?.slug,
       ...data,
     };
+
 
     try {
       formData.append("data", JSON.stringify(updatedData));
