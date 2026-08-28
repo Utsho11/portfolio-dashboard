@@ -6,7 +6,6 @@ import {
   Button,
   Divider,
   Select,
-  Form,
   Radio,
   Image,
   Space,
@@ -23,6 +22,7 @@ import {
   FileTextOutlined,
   ArrowLeftOutlined,
   CheckCircleOutlined,
+  PictureOutlined,
 } from "@ant-design/icons";
 
 const defaultCategories = [
@@ -54,8 +54,14 @@ const suggestedTags = [
 const CreateBlog: React.FC = () => {
   const [addBlog] = useAddBlogMutation();
   const navigate = useNavigate();
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  // Cover photo state
+  const [selectedCoverFile, setSelectedCoverFile] = useState<File | null>(null);
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(null);
+
+  // Additional gallery photos state
+  const [selectedGalleryFiles, setSelectedGalleryFiles] = useState<File[]>([]);
+  const [galleryPreviews, setGalleryPreviews] = useState<{ file: File; url: string }[]>([]);
 
   const { control, handleSubmit } = useForm({
     defaultValues: {
@@ -68,21 +74,40 @@ const CreateBlog: React.FC = () => {
     },
   });
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      setSelectedFile(file);
+      setSelectedCoverFile(file);
       const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
+      setCoverPreviewUrl(url);
     }
   };
 
-  const handleRemoveImage = () => {
-    setSelectedFile(null);
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-      setPreviewUrl(null);
+  const handleRemoveCover = () => {
+    setSelectedCoverFile(null);
+    if (coverPreviewUrl) {
+      URL.revokeObjectURL(coverPreviewUrl);
+      setCoverPreviewUrl(null);
     }
+  };
+
+  const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles = Array.from(e.target.files);
+      const newPreviews = newFiles.map((file) => ({
+        file,
+        url: URL.createObjectURL(file),
+      }));
+
+      setSelectedGalleryFiles((prev) => [...prev, ...newFiles]);
+      setGalleryPreviews((prev) => [...prev, ...newPreviews]);
+    }
+  };
+
+  const handleRemoveGalleryPhoto = (index: number) => {
+    URL.revokeObjectURL(galleryPreviews[index].url);
+    setSelectedGalleryFiles((prev) => prev.filter((_, i) => i !== index));
+    setGalleryPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const onSubmit = async (data: FieldValues) => {
@@ -100,8 +125,15 @@ const CreateBlog: React.FC = () => {
 
     try {
       formData.append("data", JSON.stringify(data));
-      if (selectedFile) {
-        formData.append("file", selectedFile);
+
+      if (selectedCoverFile) {
+        formData.append("file", selectedCoverFile);
+      }
+
+      if (selectedGalleryFiles.length > 0) {
+        selectedGalleryFiles.forEach((file) => {
+          formData.append("photos", file);
+        });
       }
 
       await addBlog(formData).unwrap();
@@ -171,7 +203,7 @@ const CreateBlog: React.FC = () => {
               Write &amp; Publish Blog
             </Typography.Title>
             <Typography.Text style={{ color: "#94A3B8", marginTop: "6px", display: "block" }}>
-              Craft technical articles with rich code snippets, formatting, tags, and cover banner.
+              Craft technical articles with rich code snippets, formatting, tags, cover banner &amp; photo gallery.
             </Typography.Text>
           </div>
 
@@ -308,8 +340,8 @@ const CreateBlog: React.FC = () => {
               </Col>
 
               {/* Cover Photo Upload */}
-              <Col xs={24}>
-                <Typography.Text style={labelStyle}>Blog Cover Photo / Banner</Typography.Text>
+              <Col xs={24} lg={12}>
+                <Typography.Text style={labelStyle}>Primary Cover Photo / Banner</Typography.Text>
                 <div
                   style={{
                     border: "1.5px dashed rgba(59, 130, 246, 0.4)",
@@ -317,49 +349,54 @@ const CreateBlog: React.FC = () => {
                     padding: "20px",
                     background: "#05070D",
                     textAlign: "center",
+                    minHeight: "180px",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
                   }}
                 >
-                  {previewUrl ? (
-                    <div style={{ position: "relative", display: "inline-block" }}>
+                  {coverPreviewUrl ? (
+                    <div style={{ position: "relative" }}>
                       <Image
-                        src={previewUrl}
+                        src={coverPreviewUrl}
                         alt="Cover Preview"
                         style={{
-                          maxHeight: "220px",
+                          maxHeight: "140px",
                           borderRadius: "8px",
                           objectFit: "cover",
                         }}
                       />
-                      <div style={{ marginTop: "12px" }}>
+                      <div style={{ marginTop: "10px" }}>
                         <Button
                           danger
                           icon={<DeleteOutlined />}
-                          onClick={handleRemoveImage}
+                          onClick={handleRemoveCover}
                           size="small"
                         >
-                          Remove Cover Photo
+                          Remove Cover
                         </Button>
                       </div>
                     </div>
                   ) : (
                     <div>
-                      <UploadOutlined style={{ fontSize: "28px", color: "#3B82F6" }} />
-                      <p style={{ color: "#94A3B8", marginTop: "8px", fontSize: "13px" }}>
-                        Click below or drag and drop to upload high-res cover image (PNG, JPG, WebP)
+                      <UploadOutlined style={{ fontSize: "26px", color: "#3B82F6" }} />
+                      <p style={{ color: "#94A3B8", marginTop: "8px", fontSize: "12px" }}>
+                        Main header banner image (16:9 recommended)
                       </p>
                       <input
                         type="file"
                         accept="image/*"
                         id="blog-cover-upload"
-                        onChange={handleFileChange}
+                        onChange={handleCoverChange}
                         style={{ display: "none" }}
                       />
                       <label
                         htmlFor="blog-cover-upload"
                         style={{
                           display: "inline-block",
-                          marginTop: "8px",
-                          padding: "8px 20px",
+                          marginTop: "6px",
+                          padding: "6px 18px",
                           background: "#131B30",
                           border: "1px solid #3B82F6",
                           color: "#F8FAFC",
@@ -372,6 +409,112 @@ const CreateBlog: React.FC = () => {
                         Select Cover Photo
                       </label>
                     </div>
+                  )}
+                </div>
+              </Col>
+
+              {/* Additional Photos / Gallery Upload */}
+              <Col xs={24} lg={12}>
+                <Typography.Text style={labelStyle}>
+                  Additional Photos &amp; Screenshots (Gallery)
+                </Typography.Text>
+                <div
+                  style={{
+                    border: "1.5px dashed rgba(34, 211, 238, 0.35)",
+                    borderRadius: "12px",
+                    padding: "20px",
+                    background: "#05070D",
+                    textAlign: "center",
+                    minHeight: "180px",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    id="blog-gallery-upload"
+                    onChange={handleGalleryChange}
+                    style={{ display: "none" }}
+                  />
+                  <label
+                    htmlFor="blog-gallery-upload"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      padding: "6px 18px",
+                      background: "#131B30",
+                      border: "1px solid #22D3EE",
+                      color: "#F8FAFC",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                      fontWeight: 600,
+                      fontSize: "12px",
+                      marginBottom: "10px",
+                    }}
+                  >
+                    <PictureOutlined /> Add More Photos (Multiple)
+                  </label>
+
+                  {galleryPreviews.length > 0 ? (
+                    <div
+                      style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: "8px",
+                        justifyContent: "center",
+                        marginTop: "10px",
+                        maxHeight: "130px",
+                        overflowY: "auto",
+                      }}
+                    >
+                      {galleryPreviews.map((p, idx) => (
+                        <div key={idx} style={{ position: "relative", width: 64, height: 48 }}>
+                          <img
+                            src={p.url}
+                            alt={`Gallery ${idx + 1}`}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                              borderRadius: 4,
+                              border: "1px solid rgba(255,255,255,0.2)",
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveGalleryPhoto(idx)}
+                            style={{
+                              position: "absolute",
+                              top: -4,
+                              right: -4,
+                              background: "#ef4444",
+                              color: "#fff",
+                              border: "none",
+                              borderRadius: "50%",
+                              width: 16,
+                              height: 16,
+                              fontSize: 10,
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              lineHeight: 1,
+                            }}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p style={{ color: "#64748B", fontSize: "12px", margin: 0 }}>
+                      Attach diagrams, architecture schemas, UI screenshots
+                    </p>
                   )}
                 </div>
               </Col>
@@ -392,7 +535,6 @@ const CreateBlog: React.FC = () => {
                   minHeight="320px"
                   placeholder="Write comprehensive article content. Use the toolbar for bold, italic, headings, bullet points, blockquotes, and code snippets..."
                 />
-
               </Col>
 
               <Col xs={24}>

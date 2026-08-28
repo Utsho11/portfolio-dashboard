@@ -6,6 +6,8 @@ export type TBlog = {
   title: string;
   description: string;
   image?: string;
+  photos?: string[];
+  gallery?: string[];
   author: string;
   tags?: string[];
   category?: string;

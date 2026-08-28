@@ -37,6 +37,7 @@ import {
   CalendarOutlined,
   UserOutlined,
   TagOutlined,
+  PictureOutlined,
 } from "@ant-design/icons";
 import { useForm, Controller, FieldValues } from "react-hook-form";
 import PHTextEditor from "../components/form/PHTextEditor";
@@ -65,8 +66,15 @@ const ManageBlogs: React.FC = () => {
 
   const [isEditing, setIsEditing] = useState<TBlog | null>(null);
   const [isView, setIsView] = useState<TBlog | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  // Cover photo file
+  const [selectedCoverFile, setSelectedCoverFile] = useState<File | null>(null);
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(null);
+
+  // Additional gallery photos files
+  const [selectedGalleryFiles, setSelectedGalleryFiles] = useState<File[]>([]);
+  const [galleryPreviews, setGalleryPreviews] = useState<{ file: File; url: string }[]>([]);
+  const [existingPhotos, setExistingPhotos] = useState<string[]>([]);
 
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState("");
@@ -119,19 +127,46 @@ const ManageBlogs: React.FC = () => {
       });
   }, [blogs, searchTerm, selectedCategory, selectedStatus, sortOrder]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      setSelectedFile(file);
+      setSelectedCoverFile(file);
       const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
+      setCoverPreviewUrl(url);
     }
+  };
+
+  const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles = Array.from(e.target.files);
+      const newPreviews = newFiles.map((file) => ({
+        file,
+        url: URL.createObjectURL(file),
+      }));
+
+      setSelectedGalleryFiles((prev) => [...prev, ...newFiles]);
+      setGalleryPreviews((prev) => [...prev, ...newPreviews]);
+    }
+  };
+
+  const handleRemoveNewGalleryPhoto = (index: number) => {
+    URL.revokeObjectURL(galleryPreviews[index].url);
+    setSelectedGalleryFiles((prev) => prev.filter((_, i) => i !== index));
+    setGalleryPreviews((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleRemoveExistingPhoto = (photoUrl: string) => {
+    setExistingPhotos((prev) => prev.filter((url) => url !== photoUrl));
   };
 
   const showModal = (record: TBlog) => {
     setIsEditing(record);
-    setSelectedFile(null);
-    setPreviewUrl(null);
+    setSelectedCoverFile(null);
+    setCoverPreviewUrl(null);
+    setSelectedGalleryFiles([]);
+    setGalleryPreviews([]);
+    setExistingPhotos(record.photos || record.gallery || []);
+
     reset({
       title: record.title,
       author: record.author,
@@ -207,14 +242,22 @@ const ManageBlogs: React.FC = () => {
     const toastId = toast.loading("Updating blog....");
     const formData = new FormData();
 
-    if (selectedFile) {
-      formData.append("file", selectedFile);
+    if (selectedCoverFile) {
+      formData.append("file", selectedCoverFile);
+    }
+
+    if (selectedGalleryFiles.length > 0) {
+      selectedGalleryFiles.forEach((file) => {
+        formData.append("photos", file);
+      });
     }
 
     const updatedData = {
       _id: isEditing?._id,
       id: isEditing?._id,
       key: isEditing?._id,
+      photos: existingPhotos,
+      gallery: existingPhotos,
       ...formValues,
     };
 
@@ -261,26 +304,34 @@ const ManageBlogs: React.FC = () => {
       title: "Title & Category",
       dataIndex: "title",
       key: "title",
-      render: (title: string, record: TBlog) => (
-        <div>
-          <Typography.Text strong style={{ color: "#f8fafc", fontSize: 14, display: "block" }}>
-            {title}
-          </Typography.Text>
-          <div style={{ marginTop: 4 }}>
-            <Tag color="blue" style={{ fontSize: 11 }}>
-              {record.category || "General"}
-            </Tag>
-            {record.tags && record.tags.slice(0, 2).map((t, idx) => (
-              <Tag key={idx} color="cyan" style={{ fontSize: 10 }}>
-                #{t}
+      render: (title: string, record: TBlog) => {
+        const photoCount = (record.photos?.length || record.gallery?.length || 0);
+        return (
+          <div>
+            <Typography.Text strong style={{ color: "#f8fafc", fontSize: 14, display: "block" }}>
+              {title}
+            </Typography.Text>
+            <div style={{ marginTop: 4, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+              <Tag color="blue" style={{ fontSize: 11 }}>
+                {record.category || "General"}
               </Tag>
-            ))}
-            {record.tags && record.tags.length > 2 && (
-              <span style={{ color: "#64748b", fontSize: 10 }}>+{record.tags.length - 2}</span>
-            )}
+              {photoCount > 0 && (
+                <Tag color="purple" icon={<PictureOutlined />} style={{ fontSize: 10 }}>
+                  {photoCount} {photoCount === 1 ? "Photo" : "Photos"}
+                </Tag>
+              )}
+              {record.tags && record.tags.slice(0, 2).map((t, idx) => (
+                <Tag key={idx} color="cyan" style={{ fontSize: 10 }}>
+                  #{t}
+                </Tag>
+              ))}
+              {record.tags && record.tags.length > 2 && (
+                <span style={{ color: "#64748b", fontSize: 10 }}>+{record.tags.length - 2}</span>
+              )}
+            </div>
           </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       title: "Author",
@@ -335,7 +386,7 @@ const ManageBlogs: React.FC = () => {
       width: 130,
       render: (record: TBlog) => (
         <Space size="middle">
-          <Tooltip title="View Full Article">
+          <Tooltip title="View Full Article & Gallery">
             <Button
               type="text"
               icon={<EyeOutlined />}
@@ -343,7 +394,7 @@ const ManageBlogs: React.FC = () => {
               style={{ color: "#22d3ee" }}
             />
           </Tooltip>
-          <Tooltip title="Edit Article">
+          <Tooltip title="Edit Article & Photos">
             <Button
               type="text"
               icon={<EditOutlined />}
@@ -391,7 +442,7 @@ const ManageBlogs: React.FC = () => {
               Manage Blog Articles
             </Typography.Title>
             <Typography.Text style={{ color: "#94a3b8" }}>
-              Publish, filter, edit, view, and organize technical articles for your portfolio.
+              Publish, filter, edit, view, and organize technical articles, cover banners, and photo galleries.
             </Typography.Text>
           </div>
 
@@ -416,7 +467,7 @@ const ManageBlogs: React.FC = () => {
           }}
           bodyStyle={{ padding: "16px" }}
         >
-          <Row gutter={[16, 16]} align="middle">
+          <Row gutter={[16, 16]}>
             {/* Search Input */}
             <Col xs={24} md={10} lg={8}>
               <Input
@@ -503,13 +554,13 @@ const ManageBlogs: React.FC = () => {
           title={
             <span style={{ color: "#f8fafc", fontSize: "18px", fontWeight: 700 }}>
               <EditOutlined style={{ color: "#3b82f6", marginRight: 8 }} />
-              Edit Blog Article
+              Edit Blog Article &amp; Photos
             </span>
           }
           open={isModalOpen}
           onCancel={handleCancel}
           footer={null}
-          width={900}
+          width={950}
           style={{ top: 20 }}
           styles={{
             content: { background: "#0d1220", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 16 },
@@ -621,50 +672,148 @@ const ManageBlogs: React.FC = () => {
                 />
               </Col>
 
-              <Col xs={24}>
-                <Typography.Text style={labelStyle}>Update Cover Photo (Optional)</Typography.Text>
-                <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-                  {(previewUrl || isEditing?.image) && (
-                    <Image
-                      src={previewUrl || isEditing?.image}
-                      alt="Cover Preview"
-                      width={100}
-                      height={60}
-                      style={{ objectFit: "cover", borderRadius: 6 }}
-                    />
-                  )}
+              {/* Cover Photo */}
+              <Col xs={24} lg={12}>
+                <Typography.Text style={labelStyle}>Primary Cover Banner</Typography.Text>
+                <div style={{ background: "#05070d", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, padding: 12 }}>
+                  <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                    {(coverPreviewUrl || isEditing?.image) && (
+                      <Image
+                        src={coverPreviewUrl || isEditing?.image}
+                        alt="Cover Preview"
+                        width={90}
+                        height={55}
+                        style={{ objectFit: "cover", borderRadius: 6 }}
+                      />
+                    )}
+                    <div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        id="edit-cover-upload"
+                        onChange={handleCoverChange}
+                        style={{ display: "none" }}
+                      />
+                      <label
+                        htmlFor="edit-cover-upload"
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          padding: "6px 14px",
+                          background: "#131b30",
+                          border: "1px solid #3b82f6",
+                          color: "#f8fafc",
+                          borderRadius: "6px",
+                          cursor: "pointer",
+                          fontSize: "12px",
+                          fontWeight: 600,
+                        }}
+                      >
+                        <UploadOutlined /> Change Cover
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </Col>
+
+              {/* Additional Photos / Gallery */}
+              <Col xs={24} lg={12}>
+                <Typography.Text style={labelStyle}>Additional Photos &amp; Screenshots</Typography.Text>
+                <div style={{ background: "#05070d", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, padding: 12 }}>
                   <input
                     type="file"
                     accept="image/*"
-                    id="edit-cover-upload"
-                    onChange={handleFileChange}
+                    multiple
+                    id="edit-gallery-upload"
+                    onChange={handleGalleryChange}
                     style={{ display: "none" }}
                   />
                   <label
-                    htmlFor="edit-cover-upload"
+                    htmlFor="edit-gallery-upload"
                     style={{
                       display: "inline-flex",
                       alignItems: "center",
                       gap: "6px",
-                      padding: "8px 16px",
+                      padding: "6px 14px",
                       background: "#131b30",
-                      border: "1px solid #3b82f6",
+                      border: "1px solid #22d3ee",
                       color: "#f8fafc",
                       borderRadius: "6px",
                       cursor: "pointer",
                       fontSize: "12px",
                       fontWeight: 600,
+                      marginBottom: 8,
                     }}
                   >
-                    <UploadOutlined /> Change Cover Photo
+                    <PictureOutlined /> Add More Photos
                   </label>
+
+                  {/* Existing & New Gallery Photos */}
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, maxHeight: 90, overflowY: "auto" }}>
+                    {existingPhotos.map((url, idx) => (
+                      <div key={`exist-${idx}`} style={{ position: "relative", width: 50, height: 38 }}>
+                        <img
+                          src={url}
+                          alt={`Existing ${idx}`}
+                          style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 4 }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveExistingPhoto(url)}
+                          style={{
+                            position: "absolute",
+                            top: -4,
+                            right: -4,
+                            background: "#ef4444",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: "50%",
+                            width: 16,
+                            height: 16,
+                            fontSize: 10,
+                            cursor: "pointer",
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                    {galleryPreviews.map((p, idx) => (
+                      <div key={`new-${idx}`} style={{ position: "relative", width: 50, height: 38 }}>
+                        <img
+                          src={p.url}
+                          alt={`New ${idx}`}
+                          style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 4, border: "1px solid #22d3ee" }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveNewGalleryPhoto(idx)}
+                          style={{
+                            position: "absolute",
+                            top: -4,
+                            right: -4,
+                            background: "#ef4444",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: "50%",
+                            width: 16,
+                            height: 16,
+                            fontSize: 10,
+                            cursor: "pointer",
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </Col>
 
               <Col xs={24}>
                 <Typography.Text style={labelStyle}>Description &amp; Code Snippets *</Typography.Text>
                 <PHTextEditor name="description" control={control} minHeight="260px" />
-
               </Col>
 
               <Col xs={24} style={{ textAlign: "right", marginTop: 12 }}>
@@ -688,13 +837,13 @@ const ManageBlogs: React.FC = () => {
           title={
             <span style={{ color: "#f8fafc", fontSize: "18px", fontWeight: 700 }}>
               <EyeOutlined style={{ color: "#22d3ee", marginRight: 8 }} />
-              Article Preview
+              Article Preview &amp; Gallery
             </span>
           }
           open={isViewModalOpen}
           onCancel={handleCancel}
           footer={null}
-          width={850}
+          width={900}
           style={{ top: 20 }}
           styles={{
             content: { background: "#0d1220", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 16 },
@@ -705,19 +854,19 @@ const ManageBlogs: React.FC = () => {
             <div style={{ color: "#f8fafc", marginTop: 16 }}>
               {/* Cover Banner */}
               {isView.image && (
-                <div style={{ width: "100%", maxHeight: 300, overflow: "hidden", borderRadius: 10, marginBottom: 20 }}>
+                <div style={{ width: "100%", maxHeight: 320, overflow: "hidden", borderRadius: 10, marginBottom: 20 }}>
                   <Image
                     src={isView.image}
                     alt={isView.title}
                     width="100%"
-                    height={280}
+                    height={300}
                     style={{ objectFit: "cover" }}
                   />
                 </div>
               )}
 
               {/* Title & Metadata */}
-              <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 10 }}>
+              <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 10, flexWrap: "wrap" }}>
                 <Tag color="blue">{isView.category || "General"}</Tag>
                 <Tag color={isView.isPublished !== false ? "success" : "warning"}>
                   {isView.isPublished !== false ? "Published" : "Blocked"}
@@ -747,6 +896,31 @@ const ManageBlogs: React.FC = () => {
                       </Tag>
                     ))}
                   </Space>
+                </div>
+              )}
+
+              {/* Additional Photos Gallery (if any) */}
+              {((isView.photos && isView.photos.length > 0) || (isView.gallery && isView.gallery.length > 0)) && (
+                <div style={{ marginBottom: 24 }}>
+                  <Typography.Text strong style={{ color: "#22d3ee", display: "block", marginBottom: 8 }}>
+                    <PictureOutlined style={{ marginRight: 6 }} />
+                    Article Gallery &amp; Screenshots ({(isView.photos || isView.gallery || []).length}):
+                  </Typography.Text>
+                  <Image.PreviewGroup>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: 10 }}>
+                      {(isView.photos || isView.gallery || []).map((photoUrl, pIdx) => (
+                        <div key={pIdx} style={{ height: 90, borderRadius: 8, overflow: "hidden", border: "1px solid rgba(255,255,255,0.15)" }}>
+                          <Image
+                            src={photoUrl}
+                            alt={`Gallery image ${pIdx + 1}`}
+                            width="100%"
+                            height="100%"
+                            style={{ objectFit: "cover" }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </Image.PreviewGroup>
                 </div>
               )}
 
