@@ -14,10 +14,11 @@ const blogApi = baseApi.injectEndpoints({
     }),
 
     getBlogs: builder.query({
-      query: () => {
+      query: (params?: Record<string, unknown> | null) => {
         return {
           url: `blog/get-all-blogs`,
           method: "GET",
+          params: params || undefined,
         };
       },
       providesTags: ["blog"],
@@ -38,6 +39,14 @@ const blogApi = baseApi.injectEndpoints({
       invalidatesTags: ["blog"],
     }),
 
+    togglePublishBlog: builder.mutation({
+      query: (id: string) => ({
+        url: `blog/toggle-publish/${id}`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["blog"],
+    }),
+
     deleteBlog: builder.mutation({
       query: (id: string) => ({
         url: `blog/delete-blog/${id}`,
@@ -53,4 +62,5 @@ export const {
   useGetBlogsQuery,
   useDeleteBlogMutation,
   useUpdateBlogMutation,
+  useTogglePublishBlogMutation,
 } = blogApi;
