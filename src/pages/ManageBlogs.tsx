@@ -663,7 +663,8 @@ const ManageBlogs: React.FC = () => {
 
               <Col xs={24}>
                 <Typography.Text style={labelStyle}>Description &amp; Code Snippets *</Typography.Text>
-                <PHTextEditor name="description" minHeight="260px" />
+                <PHTextEditor name="description" control={control} minHeight="260px" />
+
               </Col>
 
               <Col xs={24} style={{ textAlign: "right", marginTop: 12 }}>

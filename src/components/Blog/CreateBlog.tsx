@@ -388,9 +388,11 @@ const CreateBlog: React.FC = () => {
                 </div>
                 <PHTextEditor
                   name="description"
+                  control={control}
                   minHeight="320px"
                   placeholder="Write comprehensive article content. Use the toolbar for bold, italic, headings, bullet points, blockquotes, and code snippets..."
                 />
+
               </Col>
 
               <Col xs={24}>

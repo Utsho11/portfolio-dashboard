@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useMemo } from "react";
-import { Controller } from "react-hook-form";
+import { Controller, Control, useFormContext } from "react-hook-form";
 import "react-quill/dist/quill.snow.css";
 import ReactQuill from "react-quill";
 import { Form } from "antd";
@@ -9,6 +10,32 @@ type TInputProps = {
   placeholder?: string;
   minHeight?: string;
   themeMode?: "dark" | "light";
+  control?: Control<any>;
+  value?: string;
+  onChange?: (value: string) => void;
+};
+
+const SafeQuillEditor: React.FC<{
+  value?: string;
+  onChange?: (val: string) => void;
+  onBlur?: () => void;
+  placeholder?: string;
+  modules: any;
+  formats: string[];
+}> = ({ value, onChange, onBlur, placeholder, modules, formats }) => {
+  return (
+    <Form.Item style={{ marginBottom: 0 }}>
+      <ReactQuill
+        theme="snow"
+        value={value || ""}
+        onChange={onChange}
+        onBlur={onBlur}
+        placeholder={placeholder}
+        modules={modules}
+        formats={formats}
+      />
+    </Form.Item>
+  );
 };
 
 const PHTextEditor: React.FC<TInputProps> = ({
@@ -16,6 +43,9 @@ const PHTextEditor: React.FC<TInputProps> = ({
   placeholder = "Write comprehensive blog content with headings, code blocks, lists, and rich formatting...",
   minHeight = "220px",
   themeMode = "dark",
+  control,
+  value,
+  onChange,
 }) => {
   // Comprehensive Rich Text Editor Toolbar Modules
   const modules = useMemo(
@@ -53,8 +83,16 @@ const PHTextEditor: React.FC<TInputProps> = ({
     "image",
   ];
 
+  // Try getting form context if available
+  const formContext = useFormContext();
+  const effectiveControl = control || formContext?.control;
+
   return (
-    <div className={`ph-quill-wrapper ${themeMode === "dark" ? "quill-dark-theme" : "quill-light-theme"}`}>
+    <div
+      className={`ph-quill-wrapper ${
+        themeMode === "dark" ? "quill-dark-theme" : "quill-light-theme"
+      }`}
+    >
       <style>{`
         .ph-quill-wrapper .quill {
           display: flex;
@@ -135,22 +173,31 @@ const PHTextEditor: React.FC<TInputProps> = ({
           padding-left: 12px;
         }
       `}</style>
-      <Controller
-        name={name}
-        render={({ field }) => (
-          <Form.Item style={{ marginBottom: 0 }}>
-            <ReactQuill
-              theme="snow"
-              value={field.value || ""}
+
+      {effectiveControl ? (
+        <Controller
+          name={name}
+          control={effectiveControl}
+          render={({ field }) => (
+            <SafeQuillEditor
+              value={field.value}
               onChange={field.onChange}
               onBlur={field.onBlur}
               placeholder={placeholder}
               modules={modules}
               formats={formats}
             />
-          </Form.Item>
-        )}
-      />
+          )}
+        />
+      ) : (
+        <SafeQuillEditor
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          modules={modules}
+          formats={formats}
+        />
+      )}
     </div>
   );
 };
